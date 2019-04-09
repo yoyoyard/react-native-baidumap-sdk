@@ -153,28 +153,28 @@ class BaiduMapView(context: Context) : FrameLayout(context) {
         val duration = args.getInt(1)
         val mapStatusBuilder = MapStatus.Builder()
 
-        if (target.hasKey("center")) {
+        if (target?.hasKey("center")) {
             mapStatusBuilder.target(target.getMap("center").toLatLng())
         }
 
-        if (target.hasKey("zoomLevel")) {
+        if (target?.hasKey("zoomLevel")) {
             mapStatusBuilder.zoom(target.getDouble("zoomLevel").toFloat())
         }
 
-        if (target.hasKey("overlook")) {
+        if (target?.hasKey("overlook")) {
             mapStatusBuilder.overlook(target.getDouble("overlook").toFloat())
         }
 
-        if (target.hasKey("rotation")) {
+        if (target?.hasKey("rotation")) {
             mapStatusBuilder.rotate(target.getDouble("rotation").toFloat())
         }
 
-        if (target.hasKey("point")) {
+        if (target?.hasKey("point")) {
             val point = target.getMap("point").toPoint()
             mapStatusBuilder.target(map.projection.fromScreenLocation(point))
         }
 
-        if (target.hasKey("region")) {
+        if (target?.hasKey("region")) {
             setStatus(MapStatusUpdateFactory.newLatLngBounds(
                 target.getMap("region").toLatLngBounds()), duration)
         } else {
