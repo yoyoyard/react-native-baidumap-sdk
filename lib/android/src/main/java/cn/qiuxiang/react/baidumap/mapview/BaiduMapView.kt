@@ -154,7 +154,7 @@ class BaiduMapView(context: Context) : FrameLayout(context) {
         val mapStatusBuilder = MapStatus.Builder()
 
         if (target!!.hasKey("center")) {
-            mapStatusBuilder.target(target.getMap("center").toLatLng())
+            mapStatusBuilder.target(target.getMap("center")!!.toLatLng())
         }
 
         if (target!!.hasKey("zoomLevel")) {
@@ -170,13 +170,13 @@ class BaiduMapView(context: Context) : FrameLayout(context) {
         }
 
         if (target!!.hasKey("point")) {
-            val point = target.getMap("point").toPoint()
+            val point = target.getMap("point")!!.toPoint()
             mapStatusBuilder.target(map.projection.fromScreenLocation(point))
         }
 
         if (target!!.hasKey("region")) {
             setStatus(MapStatusUpdateFactory.newLatLngBounds(
-                target.getMap("region").toLatLngBounds()), duration)
+                target.getMap("region")!!.toLatLngBounds()), duration)
         } else {
             setStatus(MapStatusUpdateFactory.newMapStatus(mapStatusBuilder.build()), duration)
         }
