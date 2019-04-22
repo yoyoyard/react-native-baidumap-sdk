@@ -17,7 +17,7 @@ export default class Component<T> extends PureComponent<T> {
     // @ts-ignore
     UIManager.dispatchViewManagerCommand(
       findNodeHandle(this),
-      UIManager[this.nativeComponent].Commands[command],
+      UIManager.getViewManagerConfig(this.nativeComponent).Commands[command],
       params
     );
   }
