@@ -28,20 +28,26 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
     [_search suggestionSearch:option];
 }
 
-- (void)onGetSuggestionResult:(BMKSuggestionSearch *)searcher result:(BMKSuggestionSearchResult *)result errorCode:(BMKSearchErrorCode)error {
+- (void)onGetSuggestionResult:(BMKSuggestionSearch *)searcher result:(BMKSuggestionResult *)result errorCode:(BMKSearchErrorCode)error {
     if (error == BMK_SEARCH_NO_ERROR) {
-        NSArray *list = result.suggestionList;
+        NSArray *keyList = result.keyList;
+        NSArray *ptList = result.ptList;
         NSMutableArray *_resultList;
 
         int i;
-        for (i = 0; i < [list count]; i++) {
-            id result = [list objectAtIndex:i];
+        for (i = 0; i < [keyList count]; i++) {
+            id keyItem = [keyList objectAtIndex:i];
+            id ptItem = [ptList objectAtIndex:i];
 
-            [resultList add: @{
-                @"key": result.key,
-                @"address": result.address,
-                @"latitude": @(result.location.latitude),
-                @"longitude": @(result.location.longitude)
+            NSString *keyString = keyItem;
+            NSValue *ptValue = ptItem;
+            CLLocationCoordinate2D ptCoordinate = [ptValue MKCoordinateValue];
+
+            [_resultList addObject: @{
+                @"key": keyItem,
+                @"address": @"",
+                @"latitude": @(ptCoordinate.latitude),
+                @"longitude": @(ptCoordinate.longitude)
             }]
         }
 
