@@ -13,7 +13,7 @@ import java.util.ArrayList
 @Suppress("unused")
 class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
     private var promise: Promise? = null
-    private val geoCoder by lazy {
+    private val mSuggestionSearch by lazy {
         val mSuggestionSearch = SuggestionSearch.newInstance()
         mSuggestionSearch.setOnGetSuggestionResultListener(object : OnGetSuggestionResultListener {
             override fun onGetSuggestionResult(result: SuggestionResult?) {
@@ -21,7 +21,7 @@ class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBase
                     // TODO: provide error message
                     promise?.reject("", "")
                 } else {
-                    val infos = result.getAllSuggestions()
+                    val infos = result.allSuggestions
                     val promiseArray = Arguments.createArray()
 
                     for (info in infos) {
@@ -29,12 +29,12 @@ class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBase
                         data.putString("key", info.key)
                         data.putString("city", info.city)
                         data.putString("address", info.address)
-                        data.putDouble("latitude", info.location.latitude)
-                        data.putDouble("longitude", info.location.longitude)
+                        data.putDouble("latitude", info.pt.latitude)
+                        data.putDouble("longitude", info.pt.longitude)
                         promiseArray.pushMap(data)
                     }
 
-                    promise?.resolve(data)
+                    promise?.resolve(promiseArray)
                 }
                 promise = null
             }
