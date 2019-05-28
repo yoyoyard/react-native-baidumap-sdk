@@ -35,6 +35,7 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
         NSArray *ptList = result.ptList;
         NSArray *districtList = result.districtList;
         NSArray *poiIdList = result.poiIdList;
+        NSArray *cityList = result.cityList;
 
         NSMutableArray *_resultList = [[NSMutableArray alloc] init];
 
@@ -44,16 +45,19 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
             id ptItem = [ptList objectAtIndex:i];
             id districtItem = [districtList objectAtIndex:i];
             id poiIdItem = [poiIdList objectAtIndex:i];
+            id cityItem = [cityList objectAtIndex:i];
 
             NSString *keyString = keyItem;
             NSString *districtString = districtItem;
             NSString *poiIdString = poiIdItem;
+            NSString *cityString = cityItem;
 
             NSValue *ptValue = ptItem;
             CLLocationCoordinate2D ptCoordinate = ptValue.MKCoordinateValue;
 
             [_resultList addObject: @{
                 @"key": keyString,
+                @"city": cityString,
                 @"address": @"",
                 @"district": districtString,
                 @"poi": poiIdString,
