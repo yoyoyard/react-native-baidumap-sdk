@@ -27,7 +27,7 @@ class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBase
                     for (info in infos) {
                         val data = Arguments.createMap()
                         data.putString("key", info.key)
-                        data.putString("city", info.city)
+                        data.putString("poi", info.poiChildrenInfoList.toString())
                         data.putString("address", info.address)
                         data.putDouble("latitude", info.pt.latitude)
                         data.putDouble("longitude", info.pt.longitude)

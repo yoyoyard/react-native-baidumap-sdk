@@ -33,8 +33,8 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
     if (error == BMK_SEARCH_NO_ERROR) {
         NSArray *keyList = result.keyList;
         NSArray *ptList = result.ptList;
-        NSArray *districtList = result.districtList
-        NSArray *poiIdList = result.poiIdList
+        NSArray *districtList = result.districtList;
+        NSArray *poiIdList = result.poiIdList;
 
         NSMutableArray *_resultList = [[NSMutableArray alloc] init];
 
