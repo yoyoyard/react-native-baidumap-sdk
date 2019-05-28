@@ -37,6 +37,13 @@ declare const _default: {
             description: string;
         } & import("./types").LatLng>;
     };
+    Suggest: {
+        requestSuggestion(keyword: string, city?: string): Promise<{
+            key: string;
+            city: string;
+            address: string;
+        } & import("./types").LatLng>;
+    }
     Initializer: {
         init(key: string): any;
     };
