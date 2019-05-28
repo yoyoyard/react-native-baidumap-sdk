@@ -1,5 +1,6 @@
 #import <React/RCTBridgeModule.h>
 #import <BaiduMapAPI_Search/BMKSuggestionSearch.h>
+#import <MapKit/MKGeometry.h>
 
 @interface RCTSuggestModule : NSObject <RCTBridgeModule, BMKSuggestionSearchDelegate>
 @end
@@ -32,7 +33,7 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
     if (error == BMK_SEARCH_NO_ERROR) {
         NSArray *keyList = result.keyList;
         NSArray *ptList = result.ptList;
-        NSMutableArray *_resultList;
+        NSMutableArray *_resultList = [[NSMutableArray alloc] init];
 
         int i;
         for (i = 0; i < [keyList count]; i++) {
@@ -40,18 +41,20 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
             id ptItem = [ptList objectAtIndex:i];
 
             NSString *keyString = keyItem;
+            // NSValue *ptValue = [NSValue value:&ptItem withObjCType:"CLLocationCoordinate2D"];
             NSValue *ptValue = ptItem;
-            CLLocationCoordinate2D ptCoordinate = [ptValue MKCoordinateValue];
+            CLLocationCoordinate2D ptCoordinate = ptValue.MKCoordinateValue;
 
             [_resultList addObject: @{
-                @"key": keyItem,
+                @"key": keyString,
                 @"address": @"",
                 @"latitude": @(ptCoordinate.latitude),
                 @"longitude": @(ptCoordinate.longitude)
-            }]
+            }];
         }
 
         NSArray *resultList = [_resultList copy];
+        _resultList = nil;
 
         _resolve(resultList);
     } else {

@@ -16,7 +16,7 @@ RCT_REMAP_METHOD(init, key:(NSString *)key resolver:(RCTPromiseResolveBlock)reso
     if (!_manager) {
         _manager = [BMKMapManager new];
     }
-    
+
     _resolve = resolve;
     _reject = reject;
     [_manager start:key generalDelegate:self];
