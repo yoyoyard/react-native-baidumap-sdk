@@ -31,8 +31,8 @@ RCT_EXPORT_METHOD(search:(NSString *)address
 RCT_EXPORT_METHOD(reverse:(CLLocationCoordinate2D)coordinate
                  resolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject) {
-    BMKReverseGeoCodeOption *option = [BMKReverseGeoCodeOption new];
-    option.reverseGeoPoint = coordinate;
+    BMKReverseGeoCodeSearchOption *option = [BMKReverseGeoCodeSearchOption new];
+    option.location = coordinate;
     _resolve = resolve;
     _reject = reject;
     if (!_search) {
@@ -42,12 +42,11 @@ RCT_EXPORT_METHOD(reverse:(CLLocationCoordinate2D)coordinate
     [_search reverseGeoCode:option];
 }
 
-- (void)onGetGeoCodeResult:(BMKGeoCodeSearch *)searcher result:(BMKGeoCodeResult *)result errorCode:(BMKSearchErrorCode)error {
+- (void)onGetGeoCodeResult:(BMKGeoCodeSearch *)searcher result:(BMKGeoCodeSearchResult *)result errorCode:(BMKSearchErrorCode)error {
     if (error == BMK_SEARCH_NO_ERROR) {
         _resolve(@{
             @"latitude": @(result.location.latitude),
             @"longitude": @(result.location.longitude),
-            @"address": result.address,
         });
     } else {
         // TODO: provide error message
@@ -56,7 +55,7 @@ RCT_EXPORT_METHOD(reverse:(CLLocationCoordinate2D)coordinate
 }
 
 - (void)onGetReverseGeoCodeResult:(BMKGeoCodeSearch *)searcher
-                           result:(BMKReverseGeoCodeResult *)result
+                           result:(BMKReverseGeoCodeSearchResult *)result
                         errorCode:(BMKSearchErrorCode)error {
     if (error == BMK_SEARCH_NO_ERROR) {
         _resolve(@{
