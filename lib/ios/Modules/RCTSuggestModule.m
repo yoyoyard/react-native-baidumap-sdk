@@ -48,7 +48,7 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
     if (error == BMK_SEARCH_NO_ERROR) {
         NSArray *uidList = result.poiIdList;
         if ([uidList count] == 0) {
-          _resolve(uidList)
+          _resolve(uidList);
         }
         else {
           _suggestResult = result;
