@@ -18,5 +18,5 @@ Pod::Spec.new do |s|
   }
 
   s.dependency 'React'
-  s.dependency 'BaiduMapKit', "4.1.0"
+  s.dependency 'BaiduMapKit', "~> 4.1.1"
 end
