@@ -202,7 +202,7 @@ didChangeDragState:(BMKAnnotationViewDragState)newState
         _overlays[[@(overlay.overlay.hash) stringValue]] = overlay;
         [self addOverlay:overlay.overlay];
     }
-    
+
     if ([subview isKindOfClass:[RCTHeatMap class]]) {
         [self addHeatMap:((RCTHeatMap *) subview).heatMap];
     }
@@ -222,7 +222,7 @@ didChangeDragState:(BMKAnnotationViewDragState)newState
         _overlays[[@(overlay.hash) stringValue]] = overlay;
         [self removeOverlay:overlay.overlay];
     }
-    
+
     if ([subview isKindOfClass:[RCTHeatMap class]]) {
         [self removeHeatMap];
     }
