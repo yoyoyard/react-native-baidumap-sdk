@@ -84,6 +84,7 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
 
           BMKPoiInfo *poiInfo = poiInfoItem;
           NSString *tag = poiInfo.detailInfo.tag;
+          if (!tag) tag = @"";
 
           NSValue *ptValue = ptItem;
           CLLocationCoordinate2D ptCoordinate = ptValue.MKCoordinateValue;
