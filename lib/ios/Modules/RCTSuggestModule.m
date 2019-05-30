@@ -47,8 +47,13 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
 - (void)onGetSuggestionResult:(BMKSuggestionSearch *)searcher result:(BMKSuggestionResult *)result errorCode:(BMKSearchErrorCode)error {
     if (error == BMK_SEARCH_NO_ERROR) {
         NSArray *uidList = result.poiIdList;
-        _suggestResult = result;
-        [self requestForPoiDetail:uidList];
+        if ([uidList count] == 0) {
+          _resolve(uidList)
+        }
+        else {
+          _suggestResult = result;
+          [self requestForPoiDetail:uidList];
+        }
     } else {
         // TODO: provide error message
         _reject(@"", @"", nil);
