@@ -2,29 +2,26 @@
 #import <BaiduMapAPI_Search/BMKSuggestionSearch.h>
 #import <BaiduMapAPI_Search/BMKPoiSearch.h>
 #import <MapKit/MKGeometry.h>
+#import <React/RCTLog.h>
+#import <Foundation/Foundation.h>
+#import <React/RCTEventEmitter.h>
 
-@interface RCTSuggestModule : NSObject <RCTBridgeModule, BMKSuggestionSearchDelegate, BMKPoiSearchDelegate>
+@interface RCTSuggestModule : RCTEventEmitter <RCTBridgeModule, BMKSuggestionSearchDelegate, BMKPoiSearchDelegate>
 @end
 
 @implementation RCTSuggestModule {
     BMKSuggestionSearch *_search;
     BMKPoiSearch *_poiSearch;
-    RCTPromiseResolveBlock _resolve;
-    RCTPromiseRejectBlock _reject;
     BMKSuggestionResult *_suggestResult;
 }
 
 RCT_EXPORT_MODULE(BaiduMapSuggest)
 
 RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
-                    city:(NSString *)city
-      searchWithResolver:(RCTPromiseResolveBlock)resolve
-                rejecter:(RCTPromiseRejectBlock)reject) {
+                    city:(NSString *)city) {
     BMKSuggestionSearchOption *option = [BMKSuggestionSearchOption new];
     option.cityname = city;
     option.keyword = keyword;
-    _resolve = resolve;
-    _reject = reject;
 
     if (!_poiSearch) {
       _poiSearch = [BMKPoiSearch new];
@@ -37,10 +34,18 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
     [_search suggestionSearch:option];
 }
 
+- (NSArray<NSString *> *)supportedEvents {
+  return @[@"ResultEmitter"];
+}
+
 - (void)requestForPoiDetail:(NSArray *)uids {
     BMKPOIDetailSearchOption *option = [BMKPOIDetailSearchOption new];
-    option.poiUIDs = uids;
+    NSMutableArray *mutableArray = [uids mutableCopy];
+    [mutableArray removeObject:@""];
+
+    option.poiUIDs = [mutableArray copy];
     option.scope = 2;
+    mutableArray = nil;
     [_poiSearch poiDetailSearch:option];
 }
 
@@ -48,15 +53,14 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
     if (error == BMK_SEARCH_NO_ERROR) {
         NSArray *uidList = result.poiIdList;
         if ([uidList count] == 0) {
-          if (_resolve) _resolve(uidList);
+          [self sendEventWithName:@"ResultEmitter" body:uidList];
         }
         else {
           _suggestResult = result;
           [self requestForPoiDetail:uidList];
         }
     } else {
-        // TODO: provide error message
-        _reject(@"", @"", nil);
+        [self sendEventWithName:@"ResultEmitter" body:@[]];
     }
 }
 
@@ -70,6 +74,7 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
       NSArray *keyList = _suggestResult.keyList;
       NSArray *ptList = _suggestResult.ptList;
       NSArray *districtList = _suggestResult.districtList;
+      NSArray *uidList = _suggestResult.poiIdList;
       NSArray *cityList = _suggestResult.cityList;
 
       NSMutableArray *_resultList = [[NSMutableArray alloc] init];
@@ -79,12 +84,29 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
           id keyItem = [keyList objectAtIndex:i];
           id ptItem = [ptList objectAtIndex:i];
           id districtItem = [districtList objectAtIndex:i];
-          id poiInfoItem = [poiInfoList objectAtIndex:i];
           id cityItem = [cityList objectAtIndex:i];
+          id uidItem = [uidList objectAtIndex:i];
 
-          BMKPoiInfo *poiInfo = poiInfoItem;
-          NSString *tag = poiInfo.detailInfo.tag;
-          if (!tag) tag = @"";
+          NSString *tag;
+          NSString *uidItemString= uidItem;
+          if ([uidItemString isEqualToString:@""]) {
+              tag = @"";
+          } else {
+              BMKPoiInfo *searhResult;
+              for (int i = 0; i < [poiInfoList count]; i++) {
+                  BMKPoiInfo *poiInfoItem = poiInfoList[i];
+                  if ([poiInfoItem.UID isEqualToString:uidItem]) {
+                      searhResult = poiInfoItem;
+                      break;
+                  }
+              }
+              if (searhResult) {
+                  tag = searhResult.detailInfo.tag;
+                  if (!tag) tag = @"";
+              } else {
+                  tag = @"";
+              }
+          }
 
           NSValue *ptValue = ptItem;
           CLLocationCoordinate2D ptCoordinate = ptValue.MKCoordinateValue;
@@ -103,10 +125,10 @@ RCT_EXPORT_METHOD(requestSuggestion:(NSString *)keyword
       _resultList = nil;
       _suggestResult = nil;
 
-      if (_resolve) _resolve(resultList);
+      [self sendEventWithName:@"ResultEmitter" body:resultList];
     } else {
         // TODO: provide error message
-        _reject(@"", @"", nil);
+        [self sendEventWithName:@"ResultEmitter" body:@[]];
     }
 }
 @end

@@ -3,18 +3,26 @@ package cn.qiuxiang.react.baidumap.modules
 import cn.qiuxiang.react.baidumap.toLatLng
 import cn.qiuxiang.react.baidumap.toWritableMap
 import com.baidu.mapapi.search.core.SearchResult
+import com.baidu.mapapi.search.core.PoiDetailInfo
 import com.baidu.mapapi.search.sug.*
 import com.baidu.mapapi.search.poi.*
 import com.facebook.react.bridge.*
 import android.R.attr.scheme
 import android.util.Log
-import java.util.ArrayList
+import java.util.Queue
+import java.util.ArrayDeque
+import com.facebook.react.modules.core.DeviceEventManagerModule
+import java.time.temporal.TemporalAdjusters.next
+
+
+
+
 
 
 @Suppress("unused")
 class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBaseJavaModule(context) {
-    private var promise: Promise? = null
-    private var suggestResult: List<SuggestionResult.SuggestionInfo>? = null
+    private var queue: Queue<List<SuggestionResult.SuggestionInfo>> = ArrayDeque<List<SuggestionResult.SuggestionInfo>> ()
+    private var emitter : DeviceEventManagerModule.RCTDeviceEventEmitter? = null
 
     private val mPoiSearch by lazy {
         val mPoiSearch = PoiSearch.newInstance()
@@ -30,26 +38,28 @@ class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBase
 
             override fun onGetPoiDetailResult(result: PoiDetailSearchResult?) {
                 if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
-                    // TODO: provide error message
-                    promise?.reject("", "")
+                    sendEventToReactNative(Arguments.createArray())
                 } else {
                     val poiDetails = result.poiDetailInfoList
                     val promiseArray = Arguments.createArray()
+                    val suggestResult =  queue.poll()
 
-                    for ((index, info) in suggestResult!!.withIndex()) {
+                    val it = suggestResult.listIterator()
+                    while (it.hasNext()) {
+                        val info = it.next()
                         val data = Arguments.createMap()
                         data.putString("key", info.key)
                         data.putString("city", info.city)
                         data.putString("district", info.district)
-                        data.putString("tag", poiDetails[index].tag)
-                        data.putDouble("latitude", info.pt.latitude)
-                        data.putDouble("longitude", info.pt.longitude)
+                        data.putString("tag", getTagFromPoi(poiDetails, info.uid))
+                        if (info.pt != null) {
+                            data.putDouble("latitude", info.pt.latitude)
+                            data.putDouble("longitude", info.pt.longitude)
+                        }
                         promiseArray.pushMap(data)
                     }
-
-                    promise?.resolve(promiseArray)
+                    sendEventToReactNative(promiseArray)
                 }
-                promise = null
             }
         })
         mPoiSearch
@@ -60,14 +70,19 @@ class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBase
         mSuggestionSearch.setOnGetSuggestionResultListener(object : OnGetSuggestionResultListener {
             override fun onGetSuggestionResult(result: SuggestionResult?) {
                 if (result == null || result.error != SearchResult.ERRORNO.NO_ERROR) {
-                    // TODO: provide error message
-                    promise?.reject("", "")
+                    sendEventToReactNative(Arguments.createArray())
                 } else {
-                    val infos = result.allSuggestions
-                    suggestResult = infos
+                    if (result.allSuggestions.isEmpty()) {
+                        sendEventToReactNative(Arguments.createArray())
+                    } else {
+                        Thread(Runnable {
+                            val infos = result.allSuggestions
+                            queue.add(infos)
 
-                    val uids = infos.map { item -> item.uid }.joinToString(separator = ",")
-                    requestForPoi(uids)
+                            val uids = infos.map { item -> item.uid }.joinToString(separator = ",")
+                            requestForPoi(uids)
+                        }).start()
+                    }
                 }
             }
         })
@@ -86,14 +101,32 @@ class BaiduMapSuggestModule(context: ReactApplicationContext) : ReactContextBase
         mPoiSearch.searchPoiDetail(PoiDetailSearchOption().poiUids(uids))
     }
 
-    @ReactMethod
-    fun requestSuggestion(keyword: String, city: String, promise: Promise) {
-        if (this.promise == null) {
-            this.promise = promise
-            mSuggestionSearch.requestSuggestion(SuggestionSearchOption().city(city).keyword(keyword))
-        } else {
-            promise.reject("", "This callback type only permits a single invocation from native code")
+    fun getTagFromPoi(detailResult: List<PoiDetailInfo>, uid: String): String? {
+        var result : PoiDetailInfo? = null
+        for (item in detailResult) {
+           if (uid == item.uid) {
+               result = item
+               break
+           }
         }
+        if (result == null) {
+            return null
+        } else {
+            return result.tag
+        }
+    }
+
+    fun sendEventToReactNative(body: kotlin.Any) {
+        if (emitter == null) {
+            emitter = reactApplicationContext
+                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        }
+        emitter!!.emit("ResultEmitter", body)
+    }
+
+    @ReactMethod
+    fun requestSuggestion(keyword: String, city: String) {
+        mSuggestionSearch.requestSuggestion(SuggestionSearchOption().city(city).keyword(keyword))
     }
 }
 
